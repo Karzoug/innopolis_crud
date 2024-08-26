@@ -1,13 +1,14 @@
 package domain
 
-type Ing struct {
+type Ingredient struct {
 	Amount int    `json:"amount"`
 	Type   string `json:"type"`
 }
 
 type Recipe struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Ingredients []Ing  `json:"ingredients"`
-	Temperature int    `json:"temperature"`
+	ID          string       `json:"id"`
+	AuthorID    string       `json:"author_id"`
+	Name        string       `json:"name"`
+	Ingredients []Ingredient `json:"ingredients"`
+	Temperature int          `json:"temperature"`
 }
