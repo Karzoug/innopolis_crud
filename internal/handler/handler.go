@@ -11,7 +11,7 @@ import (
 )
 
 func ServerHandler(ctx *fasthttp.RequestCtx) {
-	log.Debug().
+	log.Info().
 		Str("method", string(ctx.Method())).
 		Str("uri", ctx.Request.URI().String()).
 		Str("from", string(ctx.RemoteAddr().String())).
@@ -160,7 +160,7 @@ func isAuth(ctx *fasthttp.RequestCtx, userID string) bool {
 	token := ctx.Request.Header.Peek(fasthttp.HeaderAuthorization)
 	validateResult := authclient.ValidateToken(string(token), userID)
 	if string(token) == "" || !validateResult {
-		log.Trace().
+		log.Debug().
 			Any("validating result", validateResult).
 			Str("token", string(token)).
 			Msg("not authorized request")
