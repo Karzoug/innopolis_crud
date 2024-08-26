@@ -8,43 +8,47 @@ import (
 	"crud/internal/repository/cache"
 	"crud/internal/service"
 	"errors"
-	"log"
 	"net/http"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func Run() {
+	// UNIX Time is faster and smaller than most timestamps
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	var wg sync.WaitGroup
 
 	// initialize dbs
-	DB, err := cache.RecipeCacheInit(ctx, &wg)
+	db, err := cache.RecipeCacheInit(ctx, &wg)
 	if err != nil {
-		log.Fatalf("ERROR failed to initialize user database: %v", err)
+		log.Fatal().Err(err).Msg("failed to initialize user database")
 	}
 
 	authclient.Init("localhost:8000")
 
 	// initialize service
-	service.Init(DB)
+	service.Init(db)
 
 	go func() {
+		log.Info().Str("port", "8080").Msg("starting CRUD server")
 		err := server.Run("localhost:8080", handler.ServerHandler)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatal("ERROR server run ", err)
+			log.Fatal().Err(err).Msg("server run")
 		}
 	}()
-
-	log.Println("INFO CRUD service is running")
 
 	<-ctx.Done()
 
 	if err = server.Stop(); err != nil {
-		log.Fatal("ERROR server was not gracefully shutdown", err)
+		log.Error().Err(err).Msg("server was not gracefully shutdown")
 	}
 	wg.Wait()
 
-	log.Println("INFO CRUD service was gracefully shutdown")
+	log.Info().Msg("CRUD service stopped")
 }
